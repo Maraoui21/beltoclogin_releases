@@ -57,6 +57,9 @@ download_and_install() {
     rm -rf /tmp/Beltoclogin-extract /tmp/Beltoclogin-linux.zip
 
     chmod +x "$APP_DIR/beltoclogin" 2>/dev/null || true
+    # The app lives in /opt (root-owned); the launcher runs as a normal user, so
+    # make the whole tree readable + traversable + executable for everyone.
+    chmod -R a+rX "$APP_DIR"
     # chrome-sandbox must be owned by root and setuid, otherwise Chromium refuses
     # to start; the launcher falls back to --no-sandbox if this ever isn't the case.
     if [ -f "$APP_DIR/chrome-sandbox" ]; then
