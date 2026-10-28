@@ -56,7 +56,7 @@ download_and_install() {
     mv "$inner_dir" "$APP_DIR"
     rm -rf /tmp/Beltoclogin-extract /tmp/Beltoclogin-linux.zip
 
-    chmod +x "$APP_DIR/beltoclogin" 2>/dev/null || true
+    chmod +x "$APP_DIR/$(basename "$bin")" 2>/dev/null || true
     # The app lives in /opt (root-owned); the launcher runs as a normal user, so
     # make the whole tree readable + traversable + executable for everyone.
     chmod -R a+rX "$APP_DIR"
@@ -72,14 +72,19 @@ download_and_install() {
 }
 
 create_launcher() {
+    # electron-packager names the binary after the app ("Beltoclogin"); detect it
+    # rather than assume the case.
+    local bin
+    bin=$(find "$APP_DIR" -maxdepth 1 -type f -iname 'beltoclogin' | head -1)
+    [ -z "$bin" ] && bin="$APP_DIR/Beltoclogin"
     cat > /usr/local/bin/beltoclogin <<EOF
 #!/bin/bash
 # Prefer the sandboxed binary; fall back to --no-sandbox where chrome-sandbox
 # can't be setuid root (some RDP/container environments).
 if [ -u "$APP_DIR/chrome-sandbox" ]; then
-    exec "$APP_DIR/beltoclogin" "\$@"
+    exec "$bin" "\$@"
 else
-    exec "$APP_DIR/beltoclogin" --no-sandbox "\$@"
+    exec "$bin" --no-sandbox "\$@"
 fi
 EOF
     chmod +x /usr/local/bin/beltoclogin
